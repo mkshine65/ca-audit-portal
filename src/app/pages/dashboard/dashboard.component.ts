@@ -2,14 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
 import { AuthService } from '../../services/auth.service';
 import { ClientService } from '../../services/client.service';
 import { Client } from '../../models/client.model';
+import { CreateClientDialogComponent } from './create-client-dialog/create-client-dialog.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, MatDialogModule, MatButtonModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -26,7 +29,8 @@ export class DashboardComponent implements OnInit {
   constructor(
     private clientService: ClientService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -94,6 +98,16 @@ export class DashboardComponent implements OnInit {
       error: (error) => {
         console.error('Logout error:', error);
         this.router.navigate(['/login']);
+      }
+    });
+  }
+
+  openCreateClientDialog(): void {
+    const dialogRef = this.dialog.open(CreateClientDialogComponent);
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadClients();
       }
     });
   }

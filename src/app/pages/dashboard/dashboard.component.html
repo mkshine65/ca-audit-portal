@@ -18,7 +18,12 @@
 
   <div class="main-content">
     <div class="dashboard-header">
-      <h1>Client Dashboard</h1>
+      <div class="header-left">
+        <h1>Client Dashboard</h1>
+        <button mat-raised-button color="primary" (click)="openCreateClientDialog()">
+          <i class="fas fa-plus"></i> Create Client
+        </button>
+      </div>
       <button class="logout-button" (click)="logout()">
         <i class="fas fa-sign-out-alt"></i> Logout
       </button>
