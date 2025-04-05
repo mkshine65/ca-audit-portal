@@ -1,97 +1,76 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { TaxFilingService } from '../../services/tax-filing.service';
 import { TaxFiling } from '../../models/tax-filing.model';
-import { ActivatedRoute } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { MatTableModule } from '@angular/material/table';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatButtonModule } from '@angular/material/button';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 
 @Component({
   selector: 'app-tax-filing-list',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
   template: `
     <div class="tax-filing-container">
-      <div class="header">
-        <h2>Tax Filings</h2>
+      <div *ngIf="loading" class="loading-spinner">
+        <mat-spinner></mat-spinner>
       </div>
 
       <div *ngIf="error" class="error-message">
         {{ error }}
       </div>
 
-      <div *ngIf="loading" class="loading-spinner">
-        Loading...
-      </div>
+      <table mat-table [dataSource]="taxFilings" class="tax-filing-table" *ngIf="!loading && !error">
+        <ng-container matColumnDef="filingType">
+          <th mat-header-cell *matHeaderCellDef>Filing Type</th>
+          <td mat-cell *matCellDef="let filing">{{ filing.filingType }}</td>
+        </ng-container>
 
-      <div class="tax-filing-table" *ngIf="!loading && !error">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Client ID</th>
-              <th>Filing Type</th>
-              <th>Tax Type</th>
-              <th>GST Type</th>
-              <th>Deadline</th>
-              <th>Status</th>
-              <th>Remarks</th>
-              <th>Created At</th>
-              <th>Updated At</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let filing of taxFilings">
-              <td>{{ filing.id }}</td>
-              <td>{{ filing.clientId }}</td>
-              <td>{{ filing.filingType }}</td>
-              <td>{{ filing.taxType }}</td>
-              <td>{{ filing.gstType }}</td>
-              <td>{{ filing.deadline | date:'mediumDate' }}</td>
-              <td>
-                <span class="status-badge" [class]="getStatusClass(filing.status)">
-                  {{ filing.status }}
-                </span>
-              </td>
-              <td>{{ filing.remarks }}</td>
-              <td>{{ filing.createdAt | date:'medium' }}</td>
-              <td>{{ filing.updatedAt | date:'medium' }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <ng-container matColumnDef="taxType">
+          <th mat-header-cell *matHeaderCellDef>Tax Type</th>
+          <td mat-cell *matCellDef="let filing">{{ filing.taxType }}</td>
+        </ng-container>
 
-        <div *ngIf="taxFilings.length === 0" class="no-data">
-          No tax filings found
-        </div>
+        <ng-container matColumnDef="gstType">
+          <th mat-header-cell *matHeaderCellDef>GST Type</th>
+          <td mat-cell *matCellDef="let filing">{{ filing.gstType }}</td>
+        </ng-container>
 
-        <div class="pagination-controls" *ngIf="totalPages > 0">
-          <div class="page-size-selector">
-            <label>Items per page:</label>
-            <select [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange($event)">
-              <option [ngValue]="10">10</option>
-              <option [ngValue]="20">20</option>
-              <option [ngValue]="50">50</option>
-            </select>
-          </div>
+        <ng-container matColumnDef="deadline">
+          <th mat-header-cell *matHeaderCellDef>Deadline</th>
+          <td mat-cell *matCellDef="let filing">{{ filing.deadline | date:'mediumDate' }}</td>
+        </ng-container>
 
-          <div class="pagination">
-            <button class="pagination-btn" 
-                    [disabled]="currentPage === 0"
-                    (click)="onPageChange(currentPage - 1)">
-              <i class="fas fa-chevron-left"></i>
-            </button>
-            
-            <span class="pagination-info">
-              Page {{ currentPage + 1 }} of {{ totalPages }}
-              ({{ totalElements }} items)
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let filing">
+            <span class="status-badge" [ngClass]="getStatusClass(filing.status)">
+              {{ filing.status }}
             </span>
-            
-            <button class="pagination-btn"
-                    [disabled]="currentPage === totalPages - 1"
-                    (click)="onPageChange(currentPage + 1)">
-              <i class="fas fa-chevron-right"></i>
-            </button>
-          </div>
-        </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="remarks">
+          <th mat-header-cell *matHeaderCellDef>Remarks</th>
+          <td mat-cell *matCellDef="let filing">{{ filing.remarks }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator
+        *ngIf="!loading && !error && totalElements > 0"
+        [length]="totalElements"
+        [pageSize]="pageSize"
+        [pageIndex]="currentPage"
+        [pageSizeOptions]="[5, 10, 25, 50]"
+        (page)="onPageChange($event)"
+        aria-label="Select page">
+      </mat-paginator>
+
+      <div *ngIf="!loading && !error && (!taxFilings || taxFilings.length === 0)" class="no-data">
+        No tax filings found
       </div>
     </div>
   `,
@@ -100,134 +79,74 @@ import { ActivatedRoute } from '@angular/router';
       padding: 20px;
     }
 
-    .header {
-      margin-bottom: 20px;
-    }
-
-    .error-message {
-      color: #dc3545;
-      padding: 10px;
-      margin-bottom: 20px;
-      border: 1px solid #dc3545;
-      border-radius: 4px;
-      background-color: #f8d7da;
+    .tax-filing-table {
+      width: 100%;
+      margin-top: 20px;
     }
 
     .loading-spinner {
-      text-align: center;
-      padding: 20px;
-      color: #666;
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background-color: white;
-      border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    th, td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #dee2e6;
-    }
-
-    th {
-      background-color: #f8f9fa;
-      font-weight: 600;
-    }
-
-    .status-badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    .status-badge.in-progress {
-      background-color: #ffc107;
-      color: #000;
-    }
-
-    .status-badge.completed {
-      background-color: #28a745;
-      color: white;
-    }
-
-    .status-badge.pending {
-      background-color: #dc3545;
-      color: white;
+    .error-message {
+      color: red;
+      margin: 20px 0;
     }
 
     .no-data {
       text-align: center;
-      padding: 20px;
+      margin: 20px 0;
       color: #666;
     }
 
-    .pagination-controls {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px;
-      border-top: 1px solid #dee2e6;
-    }
-
-    .page-size-selector {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .page-size-selector select {
-      padding: 6px;
-      border: 1px solid #dee2e6;
+    .status-badge {
+      padding: 4px 8px;
       border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
     }
 
-    .pagination {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .status-pending {
+      background-color: #fff3e0;
+      color: #e65100;
     }
 
-    .pagination-btn {
-      padding: 6px 12px;
-      border: 1px solid #dee2e6;
-      background-color: white;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.3s;
+    .status-in-progress {
+      background-color: #e3f2fd;
+      color: #1565c0;
     }
 
-    .pagination-btn:hover:not(:disabled) {
-      background-color: #e9ecef;
+    .status-completed {
+      background-color: #e8f5e9;
+      color: #2e7d32;
     }
-
-    .pagination-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .pagination-info {
-      color: #6c757d;
-    }
-  `]
+  `],
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatTableModule,
+    MatProgressSpinnerModule,
+    MatButtonModule,
+    MatPaginatorModule
+  ]
 })
 export class TaxFilingListComponent implements OnInit {
   taxFilings: TaxFiling[] = [];
   loading = false;
   error: string | null = null;
+  displayedColumns = ['filingType', 'taxType', 'gstType', 'deadline', 'status', 'remarks'];
+
+  // Pagination
   currentPage = 0;
   pageSize = 10;
   totalElements = 0;
   totalPages = 0;
 
   constructor(
-    private taxFilingService: TaxFilingService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private taxFilingService: TaxFilingService
   ) {}
 
   ngOnInit(): void {
@@ -235,51 +154,39 @@ export class TaxFilingListComponent implements OnInit {
   }
 
   loadTaxFilings(): void {
+    const clientId = this.route.snapshot.paramMap.get('clientId');
+    if (!clientId) {
+      this.error = 'No client ID provided';
+      return;
+    }
+
     this.loading = true;
     this.error = null;
 
-    const clientId = this.route.snapshot.paramMap.get('id');
-    
-    const observable = clientId ? 
-      this.taxFilingService.getTaxFilingsByClientId(+clientId, this.currentPage, this.pageSize) :
-      this.taxFilingService.getTaxFilings(this.currentPage, this.pageSize);
-
-    observable.subscribe({
+    this.taxFilingService.getTaxFilings(parseInt(clientId), this.currentPage, this.pageSize).subscribe({
       next: (response) => {
+        console.log('Received tax filings:', response); // Debug log
         this.taxFilings = response.content;
         this.totalElements = response.totalElements;
         this.totalPages = response.totalPages;
         this.loading = false;
       },
       error: (error) => {
-        this.error = 'Failed to load tax filings. Please try again.';
-        this.loading = false;
         console.error('Error loading tax filings:', error);
+        this.error = 'Failed to load tax filings';
+        this.loading = false;
       }
     });
   }
 
-  onPageChange(page: number): void {
-    this.currentPage = page;
-    this.loadTaxFilings();
-  }
-
-  onPageSizeChange(size: number): void {
-    this.pageSize = size;
-    this.currentPage = 0;
+  onPageChange(event: PageEvent): void {
+    this.currentPage = event.pageIndex;
+    this.pageSize = event.pageSize;
     this.loadTaxFilings();
   }
 
   getStatusClass(status: string): string {
-    switch (status.toUpperCase()) {
-      case 'IN_PROGRESS':
-        return 'in-progress';
-      case 'COMPLETED':
-        return 'completed';
-      case 'PENDING':
-        return 'pending';
-      default:
-        return '';
-    }
+    const normalizedStatus = status.toLowerCase().replace('_', '-');
+    return `status-${normalizedStatus}`;
   }
 } 

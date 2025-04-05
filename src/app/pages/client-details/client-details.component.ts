@@ -97,6 +97,35 @@ import { CreateTaxFilingDialogComponent } from '../tax-filing/create-tax-filing-
                 </tr>
               </tbody>
             </table>
+            <div class="pagination-controls" *ngIf="taxFilingsTotalPages > 0">
+              <div class="page-size-selector">
+                <label>Items per page:</label>
+                <select [(ngModel)]="taxFilingsPageSize" (ngModelChange)="onTaxFilingsPageSizeChange($event)">
+                  <option [ngValue]="10">10</option>
+                  <option [ngValue]="20">20</option>
+                  <option [ngValue]="50">50</option>
+                </select>
+              </div>
+              <div class="pagination">
+                <button class="pagination-btn" 
+                        [disabled]="taxFilingsCurrentPage === 0"
+                        (click)="onTaxFilingsPageChange(taxFilingsCurrentPage - 1)">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <span class="pagination-info">
+                  Page {{ taxFilingsCurrentPage + 1 }} of {{ taxFilingsTotalPages }}
+                  ({{ taxFilingsTotalElements }} items)
+                </span>
+                <button class="pagination-btn"
+                        [disabled]="taxFilingsCurrentPage === taxFilingsTotalPages - 1"
+                        (click)="onTaxFilingsPageChange(taxFilingsCurrentPage + 1)">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+            <div *ngIf="taxFilings.length === 0" class="no-data">
+              No tax filings found
+            </div>
           </div>
         </div>
 
@@ -347,7 +376,7 @@ import { CreateTaxFilingDialogComponent } from '../tax-filing/create-tax-filing-
 
     .status-badge.in-progress {
       background-color: #ffc107;
-      color: black;
+      color: #000;
     }
 
     .loading-spinner {
@@ -440,6 +469,11 @@ export class ClientDetailsComponent implements OnInit {
   documentsTotalElements = 0;
   documentsTotalPages = 0;
 
+  taxFilingsCurrentPage = 0;
+  taxFilingsPageSize = 10;
+  taxFilingsTotalElements = 0;
+  taxFilingsTotalPages = 0;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -454,7 +488,7 @@ export class ClientDetailsComponent implements OnInit {
     const clientId = this.route.snapshot.paramMap.get('id');
     if (clientId) {
       this.loadClient(clientId);
-      this.loadTaxFilings(clientId);
+      this.loadTaxFilings();
     }
   }
 
@@ -470,19 +504,23 @@ export class ClientDetailsComponent implements OnInit {
     });
   }
 
-  loadTaxFilings(clientId: string): void {
-    this.loading = true;
-    this.error = null;
+  loadTaxFilings(): void {
+    const clientId = this.route.snapshot.paramMap.get('id');
+    if (!clientId) {
+      return;
+    }
 
-    this.taxFilingService.getTaxFilings(parseInt(clientId)).subscribe({
-      next: (taxFilings) => {
-        this.taxFilings = taxFilings;
+    this.loading = true;
+    this.taxFilingService.getTaxFilings(parseInt(clientId), this.taxFilingsCurrentPage, this.taxFilingsPageSize).subscribe({
+      next: (response) => {
+        this.taxFilings = response.content;
+        this.taxFilingsTotalElements = response.totalElements;
+        this.taxFilingsTotalPages = response.totalPages;
         this.loading = false;
       },
-      error: (error: Error) => {
-        this.error = 'Failed to load tax filings. Please try again.';
-        this.loading = false;
+      error: (error) => {
         console.error('Error loading tax filings:', error);
+        this.loading = false;
       }
     });
   }
@@ -529,7 +567,7 @@ export class ClientDetailsComponent implements OnInit {
     if (clientId) {
       switch (tab) {
         case 'tax-filings':
-          this.loadTaxFilings(clientId);
+          this.loadTaxFilings();
           break;
         case 'payments':
           this.loadPayments(clientId);
@@ -545,7 +583,7 @@ export class ClientDetailsComponent implements OnInit {
     this.paymentsCurrentPage = page;
     const clientId = this.route.snapshot.paramMap.get('id');
     if (clientId) {
-      this.loadPayments(clientId);
+      this.loadTaxFilings();
     }
   }
 
@@ -554,7 +592,7 @@ export class ClientDetailsComponent implements OnInit {
     this.paymentsCurrentPage = 0;
     const clientId = this.route.snapshot.paramMap.get('id');
     if (clientId) {
-      this.loadPayments(clientId);
+      this.loadTaxFilings();
     }
   }
 
@@ -573,6 +611,17 @@ export class ClientDetailsComponent implements OnInit {
     if (clientId) {
       this.loadDocuments(clientId);
     }
+  }
+
+  onTaxFilingsPageChange(page: number): void {
+    this.taxFilingsCurrentPage = page;
+    this.loadTaxFilings();
+  }
+
+  onTaxFilingsPageSizeChange(pageSize: number): void {
+    this.taxFilingsPageSize = pageSize;
+    this.taxFilingsCurrentPage = 0;
+    this.loadTaxFilings();
   }
 
   getStatusClass(status: string): string {
@@ -601,7 +650,7 @@ export class ClientDetailsComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.loadTaxFilings(this.client!.id.toString());
+        this.loadTaxFilings();
       }
     });
   }
