@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
 import { ClientService } from '../../services/client.service';
 import { TaxFilingService } from '../../services/tax-filing.service';
 import { PaymentService } from '../../services/payment.service';
@@ -10,11 +12,18 @@ import { TaxFiling } from '../../models/tax-filing.model';
 import { Payment } from '../../models/payment.model';
 import { Document } from '../../models/document.model';
 import { FormsModule } from '@angular/forms';
+import { CreateTaxFilingDialogComponent } from '../tax-filing/create-tax-filing-dialog/create-tax-filing-dialog.component';
 
 @Component({
   selector: 'app-client-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [
+    CommonModule, 
+    RouterModule, 
+    FormsModule, 
+    MatDialogModule, 
+    MatButtonModule
+  ],
   template: `
     <div class="client-details-container">
       <div class="header">
@@ -50,6 +59,11 @@ import { FormsModule } from '@angular/forms';
 
       <div class="tab-content">
         <div *ngIf="activeTab === 'tax-filings'">
+          <div class="table-actions">
+            <button mat-raised-button color="primary" (click)="openCreateTaxFilingDialog()">
+              <i class="fas fa-plus"></i> Create Tax Filing
+            </button>
+          </div>
           <div class="table-container" *ngIf="!loading">
             <table>
               <thead>
@@ -83,32 +97,6 @@ import { FormsModule } from '@angular/forms';
                 </tr>
               </tbody>
             </table>
-            <div class="pagination-controls" *ngIf="taxFilingsTotalPages > 0">
-              <div class="page-size-selector">
-                <label>Items per page:</label>
-                <select [(ngModel)]="taxFilingsPageSize" (ngModelChange)="onTaxFilingsPageSizeChange($event)">
-                  <option [ngValue]="10">10</option>
-                  <option [ngValue]="20">20</option>
-                  <option [ngValue]="50">50</option>
-                </select>
-              </div>
-              <div class="pagination">
-                <button class="pagination-btn" 
-                        [disabled]="taxFilingsCurrentPage === 0"
-                        (click)="onTaxFilingsPageChange(taxFilingsCurrentPage - 1)">
-                  <i class="fas fa-chevron-left"></i>
-                </button>
-                <span class="pagination-info">
-                  Page {{ taxFilingsCurrentPage + 1 }} of {{ taxFilingsTotalPages }}
-                  ({{ taxFilingsTotalElements }} items)
-                </span>
-                <button class="pagination-btn"
-                        [disabled]="taxFilingsCurrentPage === taxFilingsTotalPages - 1"
-                        (click)="onTaxFilingsPageChange(taxFilingsCurrentPage + 1)">
-                  <i class="fas fa-chevron-right"></i>
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -424,6 +412,12 @@ import { FormsModule } from '@angular/forms';
     .pagination-info {
       color: #6c757d;
     }
+
+    .table-actions {
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: flex-end;
+    }
   `]
 })
 export class ClientDetailsComponent implements OnInit {
@@ -432,22 +426,15 @@ export class ClientDetailsComponent implements OnInit {
   loading = false;
   error: string | null = null;
 
-  // Tax Filings
   taxFilings: TaxFiling[] = [];
-  taxFilingsCurrentPage = 0;
-  taxFilingsPageSize = 10;
-  taxFilingsTotalElements = 0;
-  taxFilingsTotalPages = 0;
-
-  // Payments
   payments: Payment[] = [];
+  documents: Document[] = [];
+
   paymentsCurrentPage = 0;
   paymentsPageSize = 10;
   paymentsTotalElements = 0;
   paymentsTotalPages = 0;
 
-  // Documents
-  documents: Document[] = [];
   documentsCurrentPage = 0;
   documentsPageSize = 10;
   documentsTotalElements = 0;
@@ -456,6 +443,7 @@ export class ClientDetailsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
+    private dialog: MatDialog,
     private clientService: ClientService,
     private taxFilingService: TaxFilingService,
     private paymentService: PaymentService,
@@ -485,15 +473,14 @@ export class ClientDetailsComponent implements OnInit {
   loadTaxFilings(clientId: string): void {
     this.loading = true;
     this.error = null;
-    this.taxFilingService.getTaxFilingsByClientId(+clientId, this.taxFilingsCurrentPage, this.taxFilingsPageSize).subscribe({
-      next: (response) => {
-        this.taxFilings = response.content;
-        this.taxFilingsTotalElements = response.totalElements;
-        this.taxFilingsTotalPages = response.totalPages;
+
+    this.taxFilingService.getTaxFilings(parseInt(clientId)).subscribe({
+      next: (taxFilings) => {
+        this.taxFilings = taxFilings;
         this.loading = false;
       },
-      error: (error) => {
-        this.error = 'Failed to load tax filings';
+      error: (error: Error) => {
+        this.error = 'Failed to load tax filings. Please try again.';
         this.loading = false;
         console.error('Error loading tax filings:', error);
       }
@@ -554,25 +541,6 @@ export class ClientDetailsComponent implements OnInit {
     }
   }
 
-  // Tax Filings pagination
-  onTaxFilingsPageChange(page: number): void {
-    this.taxFilingsCurrentPage = page;
-    const clientId = this.route.snapshot.paramMap.get('id');
-    if (clientId) {
-      this.loadTaxFilings(clientId);
-    }
-  }
-
-  onTaxFilingsPageSizeChange(size: number): void {
-    this.taxFilingsPageSize = size;
-    this.taxFilingsCurrentPage = 0;
-    const clientId = this.route.snapshot.paramMap.get('id');
-    if (clientId) {
-      this.loadTaxFilings(clientId);
-    }
-  }
-
-  // Payments pagination
   onPaymentsPageChange(page: number): void {
     this.paymentsCurrentPage = page;
     const clientId = this.route.snapshot.paramMap.get('id');
@@ -590,7 +558,6 @@ export class ClientDetailsComponent implements OnInit {
     }
   }
 
-  // Documents pagination
   onDocumentsPageChange(page: number): void {
     this.documentsCurrentPage = page;
     const clientId = this.route.snapshot.paramMap.get('id');
@@ -609,11 +576,11 @@ export class ClientDetailsComponent implements OnInit {
   }
 
   getStatusClass(status: string): string {
-    switch (status.toUpperCase()) {
-      case 'IN_PROGRESS':
-        return 'in-progress';
+    switch (status) {
       case 'COMPLETED':
         return 'completed';
+      case 'IN_PROGRESS':
+        return 'in-progress';
       case 'PENDING':
         return 'pending';
       default:
@@ -623,5 +590,19 @@ export class ClientDetailsComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  openCreateTaxFilingDialog(): void {
+    if (!this.client) return;
+
+    const dialogRef = this.dialog.open(CreateTaxFilingDialogComponent, {
+      data: { clientId: this.client.id }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadTaxFilings(this.client!.id.toString());
+      }
+    });
   }
 } 

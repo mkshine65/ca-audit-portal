@@ -1,23 +1,8 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { TaxFilingResponse } from '../models/tax-filing.model';
+import { TaxFiling } from '../models/tax-filing.model';
 import { environment } from '../../environments/environment';
-
-export interface TaxFiling {
-  id: number;
-  filingType: string;
-  taxType: string;
-  gstType: string;
-  deadline: string;
-  status: string;
-  remarks: string;
-  clientId: number;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string | null;
-  updatedBy: string | null;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -27,11 +12,11 @@ export class TaxFilingService {
 
   constructor(private http: HttpClient) {}
 
-  getTaxFilings(page: number = 0, size: number = 10): Observable<TaxFilingResponse> {
-    return this.http.get<TaxFilingResponse>(`${this.apiUrl}?page=${page}&size=${size}`);
+  createTaxFiling(taxFiling: Omit<TaxFiling, 'id' | 'createdAt' | 'updatedAt'>): Observable<TaxFiling> {
+    return this.http.post<TaxFiling>(this.apiUrl, taxFiling);
   }
 
-  getTaxFilingsByClientId(clientId: number, page: number = 0, size: number = 10): Observable<TaxFilingResponse> {
-    return this.http.get<TaxFilingResponse>(`${this.apiUrl}/client/${clientId}?page=${page}&size=${size}`);
+  getTaxFilings(clientId: number): Observable<TaxFiling[]> {
+    return this.http.get<TaxFiling[]>(`${this.apiUrl}?clientId=${clientId}`);
   }
 } 

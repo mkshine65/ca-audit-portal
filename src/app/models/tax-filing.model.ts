@@ -1,16 +1,14 @@
 export interface TaxFiling {
   id: number;
+  clientId: number;
   filingType: string;
   taxType: string;
   gstType: string;
   deadline: string;
-  status: string;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
   remarks: string;
-  clientId: number;
   createdAt: string;
   updatedAt: string;
-  createdBy: string | null;
-  updatedBy: string | null;
 }
 
 export interface TaxFilingResponse {
@@ -19,4 +17,7 @@ export interface TaxFilingResponse {
   totalPages: number;
   size: number;
   number: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
 } 
