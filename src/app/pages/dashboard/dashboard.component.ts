@@ -1,18 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ClientService } from '../../services/client.service';
-import { Client, ClientResponse } from '../../models/client.model';
-import { Observable } from 'rxjs';
+import { Client } from '../../models/client.model';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss'
+  styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
   clients: Client[] = [];
@@ -23,11 +22,10 @@ export class DashboardComponent implements OnInit {
   pageSize = 10;
   totalElements = 0;
   totalPages = 0;
-  pageSizeOptions = [10, 20, 50];
 
   constructor(
-    private authService: AuthService,
     private clientService: ClientService,
+    private authService: AuthService,
     private router: Router
   ) {}
 
@@ -40,13 +38,13 @@ export class DashboardComponent implements OnInit {
     this.error = null;
 
     this.clientService.getClients(this.currentPage, this.pageSize).subscribe({
-      next: (response: ClientResponse) => {
+      next: (response) => {
         this.clients = response.content;
         this.totalElements = response.totalElements;
         this.totalPages = response.totalPages;
         this.loading = false;
       },
-      error: (error: unknown) => {
+      error: (error) => {
         this.error = 'Failed to load clients. Please try again.';
         this.loading = false;
         console.error('Error loading clients:', error);
@@ -56,34 +54,7 @@ export class DashboardComponent implements OnInit {
 
   selectClient(client: Client): void {
     this.selectedClient = client;
-  }
-
-  navigateToPayment(): void {
-    if (this.selectedClient) {
-      this.router.navigate(['/payment', this.selectedClient.id]);
-    }
-  }
-
-  navigateToTaxFiling(): void {
-    if (this.selectedClient) {
-      this.router.navigate(['/tax-filing', this.selectedClient.id]);
-    }
-  }
-
-  navigateToDocuments(): void {
-    if (this.selectedClient) {
-      this.router.navigate(['/documents', this.selectedClient.id]);
-    }
-  }
-
-  onPageSizeChange(size: number): void {
-    this.pageSize = size;
-    this.currentPage = 0; // Reset to first page when changing page size
-    this.loadClients();
-  }
-
-  viewClientDetails(clientId: number): void {
-    this.router.navigate(['/client', clientId]);
+    console.log('Selected client:', client);
   }
 
   onPageChange(page: number): void {
@@ -91,14 +62,37 @@ export class DashboardComponent implements OnInit {
     this.loadClients();
   }
 
+  onPageSizeChange(size: number): void {
+    this.pageSize = size;
+    this.currentPage = 0;
+    this.loadClients();
+  }
+
+  onPaymentClick(): void {
+    const clientId = this.selectedClient?.id || this.clients[0]?.id;
+    if (clientId) {
+      this.router.navigate(['/payments', clientId]);
+    }
+  }
+
+  onTaxFilingClick(): void {
+    this.router.navigate(['/tax-filings']);
+  }
+
+  onDocumentsClick(): void {
+    const clientId = this.selectedClient?.id || this.clients[0]?.id;
+    if (clientId) {
+      this.router.navigate(['/documents', clientId]);
+    }
+  }
+
   logout(): void {
     this.authService.logout().subscribe({
       next: () => {
         this.router.navigate(['/login']);
       },
-      error: (error: unknown) => {
-        console.error('Error during logout:', error);
-        // Still navigate to login even if the logout API call fails
+      error: (error) => {
+        console.error('Logout error:', error);
         this.router.navigate(['/login']);
       }
     });
