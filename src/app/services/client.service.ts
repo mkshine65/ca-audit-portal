@@ -23,4 +23,8 @@ export class ClientService {
   createClient(client: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>): Observable<Client> {
     return this.http.post<Client>(this.apiUrl, client);
   }
+
+  updateClient(id: number, client: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>): Observable<Client> {
+    return this.http.put<Client>(`${this.apiUrl}/${id}`, client);
+  }
 } 

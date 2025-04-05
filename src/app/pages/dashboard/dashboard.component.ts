@@ -4,15 +4,24 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
 import { ClientService } from '../../services/client.service';
 import { Client } from '../../models/client.model';
 import { CreateClientDialogComponent } from './create-client-dialog/create-client-dialog.component';
+import { EditClientDialogComponent } from './edit-client-dialog/edit-client-dialog.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, MatDialogModule, MatButtonModule],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    RouterModule, 
+    MatDialogModule, 
+    MatButtonModule,
+    MatIconModule
+  ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -104,6 +113,19 @@ export class DashboardComponent implements OnInit {
 
   openCreateClientDialog(): void {
     const dialogRef = this.dialog.open(CreateClientDialogComponent);
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadClients();
+      }
+    });
+  }
+
+  openEditClientDialog(client: Client, event: Event): void {
+    event.stopPropagation(); // Prevent row selection when clicking edit
+    const dialogRef = this.dialog.open(EditClientDialogComponent, {
+      data: { client }
+    });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {

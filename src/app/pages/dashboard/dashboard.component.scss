@@ -1,10 +1,12 @@
 .dashboard-container {
+  padding: 1rem;
+  height: 100vh;
   display: flex;
-  min-height: 100vh;
-  background-color: #f8f9fa;
+  gap: 2rem;
 
   .side-panel {
     width: 250px;
+    flex-shrink: 0;
     background-color: #f8f9fa;
     padding: 20px;
     border-right: 1px solid #dee2e6;
@@ -47,6 +49,9 @@
 
   .main-content {
     flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
     padding: 20px;
     overflow-y: auto;
 
@@ -93,29 +98,33 @@
     }
 
     .client-table {
-      background-color: white;
-      border-radius: 4px;
+      background-color: #fff;
+      border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      overflow: auto;
 
       table {
         width: 100%;
         border-collapse: collapse;
+        min-width: 1200px;
 
         th, td {
-          padding: 12px;
+          padding: 1rem;
           text-align: left;
-          border-bottom: 1px solid #dee2e6;
+          border-bottom: 1px solid #e9ecef;
+          white-space: nowrap;
         }
 
         th {
           background-color: #f8f9fa;
           font-weight: 600;
+          color: #495057;
+          position: sticky;
+          top: 0;
+          z-index: 1;
         }
 
-        tbody tr {
-          cursor: pointer;
-          transition: background-color 0.3s;
-
+        tr {
           &:hover {
             background-color: #f8f9fa;
           }
@@ -124,19 +133,27 @@
             background-color: #e9ecef;
           }
         }
+      }
 
-        .status-badge {
-          display: inline-block;
-          padding: 4px 8px;
-          border-radius: 12px;
-          font-size: 12px;
-          font-weight: 500;
-          background-color: #dc3545;
+      .edit-button {
+        opacity: 0.7;
+        transition: opacity 0.2s;
+        min-width: 40px;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+
+      .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        
+        &.active {
+          background-color: #28a745;
           color: white;
-
-          &.active {
-            background-color: #28a745;
-          }
         }
       }
     }
