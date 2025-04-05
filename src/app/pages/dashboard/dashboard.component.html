@@ -1,0 +1,118 @@
+<div class="dashboard-container">
+  <div class="side-panel">
+    <div class="panel-header">
+      <h2>Actions</h2>
+    </div>
+    <div class="panel-content">
+      <button class="panel-btn" [class.disabled]="!selectedClient" (click)="navigateToPayment()" [disabled]="!selectedClient">
+        <i class="fas fa-credit-card"></i>
+        Payment
+      </button>
+      <button class="panel-btn" [class.disabled]="!selectedClient" (click)="navigateToTaxFiling()" [disabled]="!selectedClient">
+        <i class="fas fa-file-invoice-dollar"></i>
+        Tax Filing
+      </button>
+      <button class="panel-btn" [class.disabled]="!selectedClient" (click)="navigateToDocuments()" [disabled]="!selectedClient">
+        <i class="fas fa-folder-open"></i>
+        Documents
+      </button>
+    </div>
+    <div class="panel-footer">
+      <button class="logout-btn" (click)="logout()">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="content-header">
+      <h1>Client Dashboard</h1>
+      <button class="logout-btn" (click)="logout()">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+      </button>
+    </div>
+
+    <div class="clients-section">
+      <div *ngIf="error" class="error-message">
+        {{ error }}
+      </div>
+
+      <div *ngIf="loading" class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i> Loading...
+      </div>
+
+      <div class="clients-table" *ngIf="!loading && !error">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Company Name</th>
+              <th>Contact Person</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Address</th>
+              <th>Created At</th>
+              <th>Updated At</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let client of clients">
+              <td>
+                <a class="client-id-link" (click)="viewClientDetails(client.id)">
+                  {{ client.id }}
+                </a>
+              </td>
+              <td>{{ client.companyName }}</td>
+              <td>{{ client.name }}</td>
+              <td>{{ client.phoneNumber }}</td>
+              <td>{{ client.email }}</td>
+              <td>
+                <span class="status-badge" [class.active]="client.status === 'ACTIVE'">
+                  {{ client.status }}
+                </span>
+              </td>
+              <td>{{ client.address }}</td>
+              <td>{{ client.createdAt | date:'medium' }}</td>
+              <td>{{ client.updatedAt | date:'medium' }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div *ngIf="clients.length === 0" class="no-data">
+          No clients found
+        </div>
+
+        <div class="pagination-controls" *ngIf="totalPages > 0">
+          <div class="page-size-selector">
+            <label>Items per page:</label>
+            <select [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange($event)">
+              <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+            </select>
+          </div>
+
+          <div class="pagination">
+            <button class="pagination-btn" 
+                    [disabled]="currentPage === 0"
+                    (click)="onPageChange(currentPage - 1)">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            
+            <span class="pagination-info">
+              Page {{ currentPage + 1 }} of {{ totalPages }}
+              ({{ totalElements }} items)
+            </span>
+            
+            <button class="pagination-btn"
+                    [disabled]="currentPage === totalPages - 1"
+                    (click)="onPageChange(currentPage + 1)">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

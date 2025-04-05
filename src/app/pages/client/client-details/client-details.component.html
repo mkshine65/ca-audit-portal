@@ -1,0 +1,60 @@
+<div class="client-details-container">
+  <div class="header">
+    <button class="back-btn" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i>
+      Back to Dashboard
+    </button>
+    <h1>Client Management</h1>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <div *ngIf="loading" class="loading-spinner">
+    <i class="fas fa-spinner fa-spin"></i> Loading...
+  </div>
+
+  <div class="tabs-container" *ngIf="!loading && !error">
+    <div class="tabs">
+      <button class="tab-btn" 
+              [class.active]="activeTab === 'payment'"
+              (click)="setActiveTab('payment')">
+        <i class="fas fa-credit-card"></i>
+        Payment
+      </button>
+      <button class="tab-btn"
+              [class.active]="activeTab === 'tax-filing'"
+              (click)="setActiveTab('tax-filing')">
+        <i class="fas fa-file-invoice-dollar"></i>
+        Tax Filing
+      </button>
+      <button class="tab-btn"
+              [class.active]="activeTab === 'documents'"
+              (click)="setActiveTab('documents')">
+        <i class="fas fa-folder-open"></i>
+        Documents
+      </button>
+    </div>
+
+    <div class="tab-content">
+      <div *ngIf="activeTab === 'payment'" class="payment-content">
+        <h3>Payment Information</h3>
+        <!-- Add payment content here -->
+        <p>Payment management section coming soon...</p>
+      </div>
+
+      <div *ngIf="activeTab === 'tax-filing'" class="tax-filing-content">
+        <h3>Tax Filing Information</h3>
+        <!-- Add tax filing content here -->
+        <p>Tax filing management section coming soon...</p>
+      </div>
+
+      <div *ngIf="activeTab === 'documents'" class="documents-content">
+        <h3>Documents</h3>
+        <!-- Add documents content here -->
+        <p>Document management section coming soon...</p>
+      </div>
+    </div>
+  </div>
+</div>

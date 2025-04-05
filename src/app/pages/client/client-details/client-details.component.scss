@@ -1,0 +1,156 @@
+.client-details-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  h1 {
+    margin: 0;
+    color: #2c3e50;
+  }
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #3498db;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #f8f9fa;
+  }
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+.error-message {
+  color: #e74c3c;
+  background-color: #fde8e8;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.client-info {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+}
+
+.client-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+
+  h2 {
+    margin: 0;
+    color: #2c3e50;
+  }
+}
+
+.client-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .label {
+    color: #666;
+    font-size: 0.875rem;
+  }
+
+  .value {
+    color: #2c3e50;
+    font-weight: 500;
+  }
+}
+
+.tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.3s;
+
+  &:hover {
+    background-color: #f8f9fa;
+    color: #2c3e50;
+  }
+
+  &.active {
+    background-color: #e3f2fd;
+    color: #2c3e50;
+    font-weight: 500;
+  }
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+.tab-content {
+  padding: 1rem 0;
+
+  h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+  }
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: #e74c3c;
+  color: white;
+
+  &.active {
+    background-color: #2ecc71;
+  }
+}
