@@ -17,6 +17,7 @@ import { CreatePaymentDialogComponent } from '../payment/create-payment-dialog/c
 import { TaxFilingResponse } from '../../services/tax-filing.service';
 import { PaymentResponse } from '../../models/payment.model';
 import { DocumentResponse } from '../../models/document.model';
+import { CreateDocumentDialogComponent } from '../document/create-document-dialog/create-document-dialog.component';
 
 @Component({
   selector: 'app-client-details',
@@ -204,6 +205,11 @@ import { DocumentResponse } from '../../models/document.model';
         </div>
 
         <div *ngIf="activeTab === 'documents'">
+          <div class="table-actions">
+            <button mat-raised-button color="primary" (click)="openCreateDocumentDialog()">
+              <i class="fas fa-plus"></i> Create Document
+            </button>
+          </div>
           <div class="table-container" *ngIf="!loading">
             <table>
               <thead>
@@ -217,13 +223,13 @@ import { DocumentResponse } from '../../models/document.model';
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let doc of documents">
-                  <td>{{ doc.id }}</td>
-                  <td>{{ doc.documentsRequired }}</td>
-                  <td>{{ doc.documentsPending }}</td>
-                  <td>{{ doc.remarks }}</td>
-                  <td>{{ doc.createdAt | date:'medium' }}</td>
-                  <td>{{ doc.lastUpdated | date:'medium' }}</td>
+                <tr *ngFor="let document of documents">
+                  <td>{{ document.id }}</td>
+                  <td>{{ document.documentsRequired }}</td>
+                  <td>{{ document.documentsPending }}</td>
+                  <td>{{ document.remarks }}</td>
+                  <td>{{ document.createdAt | date:'medium' }}</td>
+                  <td>{{ document.lastUpdated | date:'medium' }}</td>
                 </tr>
               </tbody>
             </table>
@@ -456,6 +462,45 @@ import { DocumentResponse } from '../../models/document.model';
       display: flex;
       justify-content: flex-end;
     }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    th {
+      background-color: #f8f9fa;
+      font-weight: 500;
+    }
+
+    tr:hover {
+      background-color: #f5f5f5;
+    }
+
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .error-message {
+      color: #dc3545;
+      padding: 1rem;
+      text-align: center;
+    }
   `]
 })
 export class ClientDetailsComponent implements OnInit {
@@ -670,6 +715,20 @@ export class ClientDetailsComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.loadPayments();
+      }
+    });
+  }
+
+  openCreateDocumentDialog(): void {
+    if (!this.client) return;
+
+    const dialogRef = this.dialog.open(CreateDocumentDialogComponent, {
+      data: { clientId: this.client.id }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadDocuments();
       }
     });
   }
