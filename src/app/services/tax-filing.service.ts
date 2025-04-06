@@ -12,6 +12,14 @@ export interface PageResponse<T> {
   number: number;
 }
 
+export interface TaxFilingResponse {
+  content: TaxFiling[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -71,5 +79,9 @@ export class TaxFilingService {
         error: (error: HttpErrorResponse) => console.error('GET Error:', error)
       })
     );
+  }
+
+  getTaxFilingsByClientId(clientId: number, page: number = 0, size: number = 10): Observable<TaxFilingResponse> {
+    return this.http.get<TaxFilingResponse>(`${this.apiUrl}/client/${clientId}?page=${page}&size=${size}`);
   }
 } 

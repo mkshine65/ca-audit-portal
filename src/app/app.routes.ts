@@ -6,6 +6,7 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { AuthGuard } from './guards/auth.guard';
 import { ClientDetailsComponent } from './pages/client-details/client-details.component';
 import { TaxFilingListComponent } from './pages/tax-filing/tax-filing-list.component';
+import { PaymentListComponent } from './pages/payment/payment-list.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -30,7 +31,7 @@ export const routes: Routes = [
       },
       {
         path: 'payments',
-        loadComponent: () => import('./pages/payment/payment-list.component').then(m => m.PaymentListComponent)
+        component: PaymentListComponent
       },
       {
         path: 'documents',

@@ -13,6 +13,10 @@ import { Payment } from '../../models/payment.model';
 import { Document } from '../../models/document.model';
 import { FormsModule } from '@angular/forms';
 import { CreateTaxFilingDialogComponent } from '../tax-filing/create-tax-filing-dialog/create-tax-filing-dialog.component';
+import { CreatePaymentDialogComponent } from '../payment/create-payment-dialog/create-payment-dialog.component';
+import { TaxFilingResponse } from '../../services/tax-filing.service';
+import { PaymentResponse } from '../../models/payment.model';
+import { DocumentResponse } from '../../models/document.model';
 
 @Component({
   selector: 'app-client-details',
@@ -130,6 +134,11 @@ import { CreateTaxFilingDialogComponent } from '../tax-filing/create-tax-filing-
         </div>
 
         <div *ngIf="activeTab === 'payments'">
+          <div class="table-actions">
+            <button mat-raised-button color="primary" (click)="openCreatePaymentDialog()">
+              <i class="fas fa-plus"></i> Create Payment
+            </button>
+          </div>
           <div class="table-container" *ngIf="!loading">
             <table>
               <thead>
@@ -493,49 +502,55 @@ export class ClientDetailsComponent implements OnInit {
   }
 
   loadClient(clientId: string): void {
+    this.loading = true;
+    this.error = null;
+
     this.clientService.getClient(clientId).subscribe({
-      next: (client) => {
+      next: (client: Client) => {
         this.client = client;
+        this.loading = false;
       },
-      error: (error) => {
-        this.error = 'Error loading client details';
+      error: (error: any) => {
+        this.error = 'Failed to load client details. Please try again.';
+        this.loading = false;
         console.error('Error loading client:', error);
       }
     });
   }
 
   loadTaxFilings(): void {
-    const clientId = this.route.snapshot.paramMap.get('id');
-    if (!clientId) {
-      return;
-    }
-
+    if (!this.client) return;
+    
     this.loading = true;
-    this.taxFilingService.getTaxFilings(parseInt(clientId), this.taxFilingsCurrentPage, this.taxFilingsPageSize).subscribe({
-      next: (response) => {
+    this.error = null;
+    this.taxFilingService.getTaxFilingsByClientId(this.client.id).subscribe({
+      next: (response: TaxFilingResponse) => {
         this.taxFilings = response.content;
         this.taxFilingsTotalElements = response.totalElements;
         this.taxFilingsTotalPages = response.totalPages;
         this.loading = false;
       },
-      error: (error) => {
-        console.error('Error loading tax filings:', error);
+      error: (error: Error) => {
+        this.error = 'Failed to load tax filings';
         this.loading = false;
+        console.error('Error loading tax filings:', error);
       }
     });
   }
 
-  loadPayments(clientId: string): void {
+  loadPayments(): void {
+    if (!this.client) return;
+    
     this.loading = true;
     this.error = null;
-    this.paymentService.getPaymentsByClientId(+clientId, this.paymentsCurrentPage, this.paymentsPageSize).subscribe({
-      next: (response) => {
+    this.paymentService.getPaymentsByClientId(this.client.id).subscribe({
+      next: (response: PaymentResponse) => {
         this.payments = response.content;
         this.paymentsTotalElements = response.totalElements;
         this.paymentsTotalPages = response.totalPages;
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: Error) => {
         this.error = 'Failed to load payments';
         this.loading = false;
         console.error('Error loading payments:', error);
@@ -543,17 +558,19 @@ export class ClientDetailsComponent implements OnInit {
     });
   }
 
-  loadDocuments(clientId: string): void {
+  loadDocuments(): void {
+    if (!this.client) return;
+    
     this.loading = true;
     this.error = null;
-    this.documentService.getDocumentsByClientId(+clientId, this.documentsCurrentPage, this.documentsPageSize).subscribe({
-      next: (response) => {
+    this.documentService.getDocumentsByClientId(this.client.id).subscribe({
+      next: (response: DocumentResponse) => {
         this.documents = response.content;
         this.documentsTotalElements = response.totalElements;
         this.documentsTotalPages = response.totalPages;
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: Error) => {
         this.error = 'Failed to load documents';
         this.loading = false;
         console.error('Error loading documents:', error);
@@ -563,54 +580,41 @@ export class ClientDetailsComponent implements OnInit {
 
   switchTab(tab: string): void {
     this.activeTab = tab;
-    const clientId = this.route.snapshot.paramMap.get('id');
-    if (clientId) {
-      switch (tab) {
-        case 'tax-filings':
-          this.loadTaxFilings();
-          break;
-        case 'payments':
-          this.loadPayments(clientId);
-          break;
-        case 'documents':
-          this.loadDocuments(clientId);
-          break;
-      }
+    if (!this.client) return;
+
+    switch (tab) {
+      case 'tax-filings':
+        this.loadTaxFilings();
+        break;
+      case 'payments':
+        this.loadPayments();
+        break;
+      case 'documents':
+        this.loadDocuments();
+        break;
     }
   }
 
   onPaymentsPageChange(page: number): void {
     this.paymentsCurrentPage = page;
-    const clientId = this.route.snapshot.paramMap.get('id');
-    if (clientId) {
-      this.loadTaxFilings();
-    }
+    this.loadTaxFilings();
   }
 
   onPaymentsPageSizeChange(size: number): void {
     this.paymentsPageSize = size;
     this.paymentsCurrentPage = 0;
-    const clientId = this.route.snapshot.paramMap.get('id');
-    if (clientId) {
-      this.loadTaxFilings();
-    }
+    this.loadTaxFilings();
   }
 
   onDocumentsPageChange(page: number): void {
     this.documentsCurrentPage = page;
-    const clientId = this.route.snapshot.paramMap.get('id');
-    if (clientId) {
-      this.loadDocuments(clientId);
-    }
+    this.loadDocuments();
   }
 
   onDocumentsPageSizeChange(size: number): void {
     this.documentsPageSize = size;
     this.documentsCurrentPage = 0;
-    const clientId = this.route.snapshot.paramMap.get('id');
-    if (clientId) {
-      this.loadDocuments(clientId);
-    }
+    this.loadDocuments();
   }
 
   onTaxFilingsPageChange(page: number): void {
@@ -625,13 +629,14 @@ export class ClientDetailsComponent implements OnInit {
   }
 
   getStatusClass(status: string): string {
-    switch (status) {
-      case 'COMPLETED':
+    switch (status?.toLowerCase()) {
+      case 'completed':
         return 'completed';
-      case 'IN_PROGRESS':
-        return 'in-progress';
-      case 'PENDING':
+      case 'pending':
         return 'pending';
+      case 'in_progress':
+      case 'partially_paid':
+        return 'in-progress';
       default:
         return '';
     }
@@ -651,6 +656,20 @@ export class ClientDetailsComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.loadTaxFilings();
+      }
+    });
+  }
+
+  openCreatePaymentDialog(): void {
+    if (!this.client) return;
+
+    const dialogRef = this.dialog.open(CreatePaymentDialogComponent, {
+      data: { clientId: this.client.id }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadPayments();
       }
     });
   }
